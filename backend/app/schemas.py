@@ -5,23 +5,18 @@ class UserCreate(BaseModel):
     phone_number: str
     password: str
 
-    model_config = {
-        "from_attributes": True
-    }
-
 class UserLogin(BaseModel):
     phone_number: str
     password: str
 
-    model_config = {
-        "from_attributes": True
-    }
+class UserUpdate(BaseModel):
+    name: str | None = None
+    password: str | None = None
 
 class UserOut(BaseModel):
     id: int
     name: str
     phone_number: str
 
-    model_config = {
-        "from_attributes": True
-    }
+    class Config:
+        orm_mode = True

@@ -1,32 +1,24 @@
 from jose import JWTError, jwt
-from datetime import datetime, timedelta
-from typing import Union
-from fastapi import HTTPException, Depends
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from .secret import SECRET_KEY, ALGORITHM  # Тут должны быть ваши ключи и алгоритм
+from datetime import datetime, timedelta
+import os
 
-# Для использования OAuth2PasswordBearer
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+SECRET_KEY = os.getenv("SECRET_KEY", "testsecret")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-# Функция для создания токена
-def create_access_token(data: dict, expires_delta: timedelta = timedelta(hours=1)):
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/login")
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
-    expire = datetime.utcnow() + expires_delta
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# Функция для верификации токена
 def verify_token(token: str = Depends(oauth2_scheme)):
     try:
-        # Декодируем токен
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        
-        # Проверка, есть ли обязательное поле 'sub' (например, телефон пользователя)
-        if "sub" not in payload:
-            raise HTTPException(status_code=403, detail="Token does not contain subject ('sub')")
-        
-        return payload  # Возвращаем полезную нагрузку токена
+        return payload
     except JWTError:
-        raise HTTPException(status_code=403, detail="Could not validate credentials")
-
+        raise HTTPException(status_code=401, detail="Invalid token")

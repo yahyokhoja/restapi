@@ -4,22 +4,28 @@ from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения
+# Загружаем переменные окружения из .env
 load_dotenv()
 
-# Строка подключения к базе данных (из .env файла)
+# Получаем строку подключения
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Создание объекта базы данных
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"sslmode": "require"} if "render" in SQLALCHEMY_DATABASE_URL else {})
+if not SQLALCHEMY_DATABASE_URL:
+    raise ValueError("DATABASE_URL не задан. Проверь .env файл или переменные окружения.")
 
-# Создаем сессию
+# Обработка sslmode только если строка подключения содержит 'render'
+connect_args = {"sslmode": "require"} if "render" in SQLALCHEMY_DATABASE_URL else {}
+
+# Создание движка SQLAlchemy
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args=connect_args)
+
+# Создание сессии
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Создание Base, который используется для создания всех моделей
+# Базовый класс для моделей
 Base = declarative_base()
 
-# Функция для получения сессии базы данных
+# Генератор для получения сессии
 def get_db():
     db = SessionLocal()
     try:

@@ -1,27 +1,23 @@
 from pydantic import BaseModel
 
-class UserCreate(BaseModel):
-    name: str
-    phone_number: str
+class UserBase(BaseModel):
+    username: str
+    email: str
+    full_name: str = None
+
+class UserCreate(UserBase):
     password: str
 
-    model_config = {
-        "from_attributes": True
-    }
+class UserUpdate(UserBase):
+    password: str = None
+
+class UserInDB(UserBase):
+    id: int
+    password_hash: str
+
+    class Config:
+        orm_mode = True
 
 class UserLogin(BaseModel):
-    phone_number: str
+    username: str
     password: str
-
-    model_config = {
-        "from_attributes": True
-    }
-
-class UserOut(BaseModel):
-    id: int
-    name: str
-    phone_number: str
-
-    model_config = {
-        "from_attributes": True
-    }
